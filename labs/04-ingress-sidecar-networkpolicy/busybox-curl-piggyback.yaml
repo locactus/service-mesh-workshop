@@ -1,0 +1,23 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: busybox-curl
+  labels:
+    app: pentesting
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pentesting
+        run: busybox-curl
+        piggyback: ok       ### labeled to be used for L3/L4 NetworkPolicy
+    spec:
+      containers:
+      - image: radial/busyboxplus:curl
+        imagePullPolicy: IfNotPresent       ### Always
+        name: busybox-curl
+        stdin: true
+        tty: true
+---

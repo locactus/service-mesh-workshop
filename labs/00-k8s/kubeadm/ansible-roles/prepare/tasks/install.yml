@@ -1,0 +1,55 @@
+- name: Update deb/apt repositories cache and install dependencies
+  apt:
+    name: '{{ item }}'
+    update_cache: yes   ## equivalent of apt-get update
+    state: latest
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+
+- name: Add the apt/deb K8s repository
+  apt_repository:
+    repo: 'deb http://apt.kubernetes.io/ kubernetes-xenial main'
+    state: present
+    filename: kubernetes-xenial
+
+#- name: Remove previous installation of kubernetes components (kubelet, kubeadm, kubectl)
+#  apt:
+#    name: '{{ item }}'
+#    state: absent
+#  with_items:
+#    - kubelet
+#    - kubeadm
+#    - kubectl
+
+- name: Install Docker and K8s components (kubelet, kubeadm, kubectl) and ntp
+  apt:
+    name: '{{ item }}'
+    state: present
+    allow_unauthenticated: yes
+  with_items:
+    - docker.io={{ _docker_version }}
+    - kubelet={{ _k8s_version }}-{{ _k8s_version_deb_min }}
+    - kubeadm={{ _k8s_version }}-{{ _k8s_version_deb_min }}
+    - kubectl={{ _k8s_version }}-{{ _k8s_version_deb_min }}
+    - ntp
+
+- name: Setup 'net.ipv4.ip_forward'
+  sysctl:
+    name: '{{ item }}'
+    value: 1
+    state: present
+    reload: yes
+    sysctl_set: yes
+  with_items:
+    - net.ipv4.ip_forward
+
+- name: Setup Docker, Kubelet and NTP systemd services
+  service:
+    name: '{{ item }}'
+    state: started
+    enabled: yes
+  with_items:
+    - docker
+    - ntp
+    - kubelet
